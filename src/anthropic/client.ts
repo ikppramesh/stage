@@ -21,7 +21,8 @@ export const OPENROUTER_MODELS = [
 
 export const OPENROUTER_KEY =
   process.env.OPENROUTER_API_KEY ||
-  "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";
+  // loaded from OPENROUTER_API_KEY env var (see .env); no hardcoded fallback
+  "";
 
 let _anthropic: Anthropic | null = null;
 let _openrouter: OpenAI | null = null;
@@ -55,7 +56,13 @@ export function isAuthError(err: unknown): boolean {
 }
 
 export function isProviderError(err: unknown): boolean {
-  if (err instanceof OpenAI.APIError && (err.status === 503 || err.status === 502)) return true;
-  if (err instanceof Error && (err.message.includes("Provider returned error") || err.message.includes("overloaded"))) return true;
+  if (err instanceof OpenAI.APIError && (err.status === 429 || err.status === 503 || err.status === 502)) return true;
+  if (err instanceof Error && (
+    err.message.includes("Provider returned error") ||
+    err.message.includes("overloaded") ||
+    err.message.includes("rate-limited") ||
+    err.message.includes("rate_limit") ||
+    err.message.includes("429")
+  )) return true;
   return false;
 }
