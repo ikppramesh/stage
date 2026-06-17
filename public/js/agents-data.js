@@ -22,9 +22,9 @@ const OPENROUTER_MODELS = [
 
 const AGENT_REGISTRY = [
 
-  /* ════════════════════ ENGINEERING ════════════════════ */
+  /* ════════════════════ SOFTWARE DEVELOPMENT ════════════════════ */
   {
-    category: "Engineering",
+    category: "Software Development",
     agents: [
 
       /* ── Software Development ── */
@@ -478,14 +478,6 @@ Use Markdown with Python code blocks. Always end with:
 - [ ] Action 2`
       },
 
-    ]  // end Engineering agents
-  },
-
-  /* ════════════════════ PRODUCT & DESIGN ════════════════════ */
-  {
-    category: "Product & Design",
-    agents: [
-
       /* ── Product Manager ── */
       {
         id: "product-manager",
@@ -640,14 +632,6 @@ Use Markdown. Always end with:
 - [ ] Action 2`
       },
 
-    ]  // end Product & Design agents
-  },
-
-  /* ════════════════════ ARCHITECTURE & LEADERSHIP ════════════════════ */
-  {
-    category: "Architecture & Leadership",
-    agents: [
-
       /* ── Software Architect ── */
       {
         id: "software-architect",
@@ -790,7 +774,7 @@ Use Markdown with code blocks. Always end with:
 - [ ] Action 2`
       },
 
-    ]  // end Architecture & Leadership agents
+    ]  // end Software Development agents
   },
 
 ];

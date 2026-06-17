@@ -67,7 +67,7 @@ const S = {
   mode:          null,   // 'ws' | 'direct'
   ws:            null,
   clientId:      localStorage.getItem("stage_cid") || null,
-  activeAgentId: "software-engineer",
+  activeAgentId: "software-development",
   isStreaming:   false,
   tree:          AGENT_REGISTRY,
   agentSessions: {},     // agentId → { history: [], messages: [], tokens: {} }

@@ -22,9 +22,7 @@ export interface Agent {
 }
 
 export const CATEGORIES: string[] = [
-  "Engineering",
-  "Product & Design",
-  "Architecture & Leadership",
+  "Software Development",
 ];
 
 export const AGENTS: Agent[] = [
@@ -37,7 +35,7 @@ export const AGENTS: Agent[] = [
     description: "Full SDLC from PRD to production",
     emoji: "🧑‍💻",
     color: "#00d4aa",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "status",      name: "Status",      icon: "📊", description: "Project overview", prompt: "Show me the current project status and what phase we are in." },
       { id: "connect",     name: "Connect",     icon: "🔗", description: "Connect repo",    prompt: "I want to connect a repository. Ask me for the GitHub URL or owner/repo." },
@@ -77,7 +75,7 @@ Use Markdown. Always end with:
     description: "UI components, styling, accessibility & performance",
     emoji: "🎨",
     color: "#f59e0b",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "component",    name: "Component",    icon: "🧩", description: "Build UI component",   prompt: "Help me build a UI component." },
       { id: "style",        name: "Style",        icon: "🎨", description: "Styling solution",     prompt: "Help me with styling for a component or page." },
@@ -105,7 +103,7 @@ Use Markdown with tsx/css code blocks. End with:
     description: "APIs, databases, auth & microservices",
     emoji: "⚙️",
     color: "#6366f1",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "api-design", name: "API Design",  icon: "📡", description: "Design REST/GraphQL API",  prompt: "Help me design an API endpoint or schema." },
       { id: "schema",     name: "DB Schema",   icon: "🗃️", description: "Database schema design",  prompt: "Help me design a database schema." },
@@ -133,7 +131,7 @@ Use Markdown with language-tagged code blocks. End with:
     description: "End-to-end features across UI, API & database",
     emoji: "🔄",
     color: "#10b981",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "feature",    name: "Feature",    icon: "✨", description: "Full-stack feature",   prompt: "Help me build a full-stack feature end-to-end." },
       { id: "integrate",  name: "Integrate",  icon: "🔗", description: "Wire frontend to API", prompt: "Help me wire a frontend to a backend API." },
@@ -160,7 +158,7 @@ Use Markdown with per-layer code blocks. End with:
     description: "CI/CD, Docker, Kubernetes, IaC & monitoring",
     emoji: "🚀",
     color: "#f97316",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "pipeline",   name: "Pipeline",   icon: "⚙️", description: "CI/CD pipeline",      prompt: "Help me build a CI/CD pipeline." },
       { id: "dockerfile", name: "Dockerfile", icon: "🐳", description: "Containerise app",     prompt: "Help me containerise an application with Docker." },
@@ -189,7 +187,7 @@ Use Markdown with YAML/HCL/shell code blocks. End with:
     description: "Test strategy, unit/integration/E2E & bug triage",
     emoji: "🧪",
     color: "#ef4444",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "test-plan",   name: "Test Plan",   icon: "📋", description: "Write test plan",     prompt: "Help me create a test plan for a feature or system." },
       { id: "unit-test",   name: "Unit Tests",  icon: "🔬", description: "Write unit tests",    prompt: "Help me write unit tests with full coverage." },
@@ -219,7 +217,7 @@ Use Markdown with code blocks. End with:
     description: "OWASP, threat modeling, SAST & dependency audits",
     emoji: "🛡️",
     color: "#dc2626",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "threat-model",    name: "Threat Model",    icon: "🗺️", description: "STRIDE threat model",  prompt: "Help me create a STRIDE threat model for my system." },
       { id: "owasp-audit",     name: "OWASP Audit",     icon: "🔎", description: "OWASP Top 10 audit",   prompt: "Run an OWASP Top 10 audit on my code or endpoint." },
@@ -247,7 +245,7 @@ Use Markdown with findings tables. End with:
     description: "React Native / Flutter, offline-first & app store",
     emoji: "📱",
     color: "#8b5cf6",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "component",  name: "Component",         icon: "🧩", description: "Mobile UI component",   prompt: "Help me build a mobile UI component." },
       { id: "navigation", name: "Navigation",         icon: "🗺️", description: "Navigation setup",      prompt: "Help me set up or fix navigation." },
@@ -274,7 +272,7 @@ Use Markdown with tsx/dart code blocks. End with:
     description: "ETL pipelines, data modeling & SQL optimisation",
     emoji: "🗄️",
     color: "#0ea5e9",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "pipeline",  name: "Pipeline",      icon: "🔄", description: "Data pipeline design",  prompt: "Help me design a data pipeline." },
       { id: "etl",       name: "ETL",           icon: "⚙️", description: "Build ETL job",          prompt: "Help me build an ETL job." },
@@ -301,7 +299,7 @@ Use Markdown with SQL/Python code blocks. End with:
     description: "RAG, fine-tuning, LLM integration & model evaluation",
     emoji: "🤖",
     color: "#a855f7",
-    category: "Engineering",
+    category: "Software Development",
     phases: [
       { id: "rag",       name: "RAG Setup",       icon: "🔍", description: "Build RAG pipeline",   prompt: "Help me build a RAG system." },
       { id: "fine-tune", name: "Fine-Tuning",     icon: "🎯", description: "Fine-tune a model",    prompt: "Help me fine-tune a model with LoRA/QLoRA." },
@@ -330,7 +328,7 @@ Use Markdown with Python code blocks. End with:
     description: "PRDs, user stories, roadmaps & OKRs",
     emoji: "📋",
     color: "#ec4899",
-    category: "Product & Design",
+    category: "Software Development",
     phases: [
       { id: "prd",        name: "Write PRD",     icon: "📄", description: "Product Requirements Doc", prompt: "Help me write a Product Requirements Document." },
       { id: "user-story", name: "User Story",    icon: "👤", description: "Write user stories",        prompt: "Help me write user stories with acceptance criteria." },
@@ -361,7 +359,7 @@ Use Markdown with tables. End with:
     description: "User flows, wireframes & design systems",
     emoji: "✏️",
     color: "#f43f5e",
-    category: "Product & Design",
+    category: "Software Development",
     phases: [
       { id: "user-flow",      name: "User Flow",       icon: "🗺️", description: "Map user flow",           prompt: "Help me map a user flow as a Mermaid diagram." },
       { id: "wireframe",      name: "Wireframe",       icon: "🖼️", description: "ASCII wireframe",          prompt: "Help me design a wireframe for a screen or feature." },
@@ -391,7 +389,7 @@ Use Markdown. End with:
     description: "API docs, READMEs, runbooks & changelogs",
     emoji: "📝",
     color: "#84cc16",
-    category: "Product & Design",
+    category: "Software Development",
     phases: [
       { id: "api-docs",   name: "API Docs",     icon: "📡", description: "OpenAPI documentation",  prompt: "Help me write API documentation in OpenAPI 3.0 format." },
       { id: "readme",     name: "README",       icon: "📄", description: "Write README",            prompt: "Help me write a complete README for my project." },
@@ -421,7 +419,7 @@ Use Markdown. End with:
     description: "System design, ADRs, tech spikes & migrations",
     emoji: "🏗️",
     color: "#06b6d4",
-    category: "Architecture & Leadership",
+    category: "Software Development",
     phases: [
       { id: "system-design", name: "System Design", icon: "🏛️", description: "C4 system design",    prompt: "Help me design a system using the C4 model." },
       { id: "adr",           name: "ADR",           icon: "📜", description: "Architecture Decision Record", prompt: "Help me write an Architecture Decision Record." },
@@ -452,7 +450,7 @@ Use Markdown with Mermaid. End with:
     description: "Sprint planning, retros, capacity & team health",
     emoji: "👔",
     color: "#64748b",
-    category: "Architecture & Leadership",
+    category: "Software Development",
     phases: [
       { id: "sprint-plan", name: "Sprint Plan",   icon: "📅", description: "Sprint planning",      prompt: "Help me plan a sprint." },
       { id: "retro",       name: "Retro",         icon: "🔄", description: "Retrospective session", prompt: "Help me plan and run a retrospective." },
@@ -480,7 +478,7 @@ Use Markdown with tables. End with:
     description: "PR reviews, coding standards, refactoring & mentoring",
     emoji: "🔍",
     color: "#14b8a6",
-    category: "Architecture & Leadership",
+    category: "Software Development",
     phases: [
       { id: "pr-review",     name: "PR Review",        icon: "🔎", description: "Code review",          prompt: "Help me review a pull request." },
       { id: "refactor",      name: "Refactor",         icon: "🔧", description: "Refactor code",         prompt: "Help me refactor code to reduce complexity or duplication." },
