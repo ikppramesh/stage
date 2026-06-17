@@ -480,11 +480,22 @@ async function directSendRaw(userMessage) {
 function renderTree(tree) {
   const nav = $("agent-tree");
   nav.innerHTML = "";
-  tree.forEach(group => {
-    const catEl = document.createElement("div");
-    catEl.className = "tree-category";
-    catEl.textContent = group.category;
-    nav.appendChild(catEl);
+  tree.forEach((group, gi) => {
+    // Collapsible category header
+    const catBtn = document.createElement("button");
+    catBtn.className = "tree-category";
+    catBtn.innerHTML = `<span class="cat-arrow">▾</span><span class="cat-name">${group.category}</span><span class="cat-count">${group.agents.length}</span>`;
+    nav.appendChild(catBtn);
+
+    // Collapsible agent list container — expanded by default
+    const listEl = document.createElement("div");
+    listEl.className = "tree-agent-list open";
+    nav.appendChild(listEl);
+
+    catBtn.addEventListener("click", () => {
+      const open = listEl.classList.toggle("open");
+      catBtn.querySelector(".cat-arrow").textContent = open ? "▾" : "▸";
+    });
 
     group.agents.forEach(agent => {
       const btn = document.createElement("button");
@@ -492,14 +503,14 @@ function renderTree(tree) {
       btn.dataset.id = agent.id;
       btn.innerHTML = `<span class="ag-emoji">${agent.emoji}</span><span class="ag-label"><span class="ag-name">${agent.name}</span><span class="ag-desc">${agent.description}</span></span>`;
       btn.addEventListener("click", () => selectAgent(agent.id));
-      nav.appendChild(btn);
+      listEl.appendChild(btn);
 
       const hintsEl = document.createElement("div");
       hintsEl.className = "agent-skill-hints";
       const hintPhases = agent.phases || [];
-      hintsEl.innerHTML = hintPhases.slice(0,5).map(p=>`<span class="skill-hint">${p.icon} ${p.name}</span>`).join("")
-        + (hintPhases.length > 5 ? `<span class="skill-hint-more">+${hintPhases.length-5} more</span>` : "");
-      nav.appendChild(hintsEl);
+      hintsEl.innerHTML = hintPhases.slice(0, 4).map(p => `<span class="skill-hint">${p.icon} ${p.name}</span>`).join("")
+        + (hintPhases.length > 4 ? `<span class="skill-hint-more">+${hintPhases.length - 4} more</span>` : "");
+      listEl.appendChild(hintsEl);
     });
   });
 }

@@ -98,15 +98,45 @@ html, body {
   scrollbar-color: var(--border) transparent;
 }
 
-/* Category header */
+/* Category header — collapsible toggle */
 .tree-category {
-  padding: 10px 16px 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px 6px;
+  background: transparent;
+  border: none;
   font-size: 10px;
   font-weight: 700;
   color: var(--text-3);
   letter-spacing: 1px;
   text-transform: uppercase;
-  user-select: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--sans);
+  transition: color .12s;
+}
+.tree-category:hover { color: var(--text-2); }
+.cat-arrow { font-size: 9px; flex-shrink: 0; transition: transform .15s; }
+.cat-name  { flex: 1; }
+.cat-count {
+  background: var(--surface2);
+  color: var(--text-3);
+  border-radius: 9px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Collapsible agent list */
+.tree-agent-list {
+  overflow: hidden;
+  max-height: 0;
+}
+.tree-agent-list.open {
+  max-height: 9999px;
 }
 
 /* Agent row — clean, no chevron, no phase drawer */
