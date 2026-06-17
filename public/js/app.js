@@ -245,7 +245,7 @@ async function directSend(userMessage) {
       const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_KEY}`,
+          "Authorization": `Bearer ${getApiKey()}`,
           "Content-Type":  "application/json",
           "HTTP-Referer":  window.location.href,
           "X-Title":       "Stage AI Agent Terminal",
@@ -401,7 +401,7 @@ async function directSendRaw(userMessage) {
       const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${OPENROUTER_KEY}`,
+          "Authorization": `Bearer ${getApiKey()}`,
           "Content-Type":  "application/json",
           "HTTP-Referer":  window.location.href,
           "X-Title":       "Stage AI Agent Terminal",
@@ -769,6 +769,88 @@ function setConnStatus(cls, txt) {
   $("status-dot").className = `sdot ${cls}`;
   $("status-text").textContent = txt;
 }
+
+// ── API Key modal ─────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem("stage_or_key") || OPENROUTER_KEY;
+}
+
+function updateKeyBtnState() {
+  const hasCustom = !!localStorage.getItem("stage_or_key");
+  $("btn-key").classList.toggle("has-custom", hasCustom);
+  $("btn-key").title = hasCustom ? "API Key (custom key active)" : "API Key Settings";
+}
+
+(function initKeyModal() {
+  const modal   = $("key-modal");
+  const keyInput = $("key-input");
+  const keyStatus = $("key-status");
+
+  // Open
+  $("btn-key").addEventListener("click", () => {
+    const stored = localStorage.getItem("stage_or_key") || "";
+    keyInput.value = stored;
+    keyInput.type  = "password";
+    $("key-vis").textContent = "👁";
+    keyStatus.textContent = "";
+    keyStatus.className = "key-status";
+    modal.hidden = false;
+    keyInput.focus();
+  });
+
+  // Close via ✕ button
+  $("key-close").addEventListener("click", () => { modal.hidden = true; });
+
+  // Close via backdrop click
+  modal.addEventListener("click", e => {
+    if (e.target === modal) modal.hidden = true;
+  });
+
+  // Close on Escape
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !modal.hidden) modal.hidden = true;
+  });
+
+  // Show / hide toggle
+  $("key-vis").addEventListener("click", () => {
+    const isPass = keyInput.type === "password";
+    keyInput.type = isPass ? "text" : "password";
+    $("key-vis").textContent = isPass ? "🙈" : "👁";
+  });
+
+  // Save & Use
+  $("key-save").addEventListener("click", () => {
+    const val = keyInput.value.trim();
+    if (!val) {
+      keyStatus.textContent = "Please enter a key or click "Use Default".";
+      keyStatus.className = "key-status err";
+      return;
+    }
+    if (!val.startsWith("sk-or-")) {
+      keyStatus.textContent = "Key must start with sk-or- (OpenRouter format).";
+      keyStatus.className = "key-status err";
+      return;
+    }
+    localStorage.setItem("stage_or_key", val);
+    updateKeyBtnState();
+    keyStatus.textContent = "✓ Custom key saved — active for all requests.";
+    keyStatus.className = "key-status ok";
+    setTimeout(() => { modal.hidden = true; }, 1200);
+  });
+
+  // Use Default
+  $("key-use-default").addEventListener("click", () => {
+    localStorage.removeItem("stage_or_key");
+    keyInput.value = "";
+    updateKeyBtnState();
+    keyStatus.textContent = "Using shared default key.";
+    keyStatus.className = "key-status ok";
+    setTimeout(() => { modal.hidden = true; }, 1000);
+  });
+
+  // Set initial button state on load
+  updateKeyBtnState();
+})();
 
 // ── Helpers ───────────────────────────────────────────────
 function escHtml(t) {

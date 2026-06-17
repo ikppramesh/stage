@@ -54,9 +54,34 @@
             <span class="tok-sep">·</span>
             <span id="tok-calls" title="API calls">0 calls</span>
           </div>
+          <button id="btn-key" class="tb-btn tb-btn-key" title="API Key Settings">🔑 Key</button>
           <button id="btn-clear" class="tb-btn" title="Clear chat">⌫ Clear</button>
         </div>
       </header>
+
+      <!-- ── API Key Modal ── -->
+      <div id="key-modal" class="key-modal" hidden>
+        <div class="key-modal-box">
+          <div class="key-modal-header">
+            <span class="key-modal-title">🔑 OpenRouter API Key</span>
+            <button class="key-modal-close" id="key-close">✕</button>
+          </div>
+          <p class="key-modal-desc">
+            Enter your own key to use your personal rate limits.<br>
+            Leave blank to use the shared default key.
+          </p>
+          <div class="key-input-row">
+            <input type="password" id="key-input" class="key-input" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false"/>
+            <button class="key-vis-btn" id="key-vis" title="Show/hide">👁</button>
+          </div>
+          <div id="key-status" class="key-status"></div>
+          <div class="key-modal-actions">
+            <button class="key-btn-save" id="key-save">Save & Use</button>
+            <button class="key-btn-clear" id="key-use-default">Use Default</button>
+          </div>
+          <p class="key-modal-note">Key is stored in your browser only — never sent to our servers.</p>
+        </div>
+      </div>
 
       <!-- Chat area -->
       <div id="chat" role="log" aria-live="polite">
