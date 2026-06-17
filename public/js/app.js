@@ -822,7 +822,7 @@ function updateKeyBtnState() {
   $("key-save").addEventListener("click", () => {
     const val = keyInput.value.trim();
     if (!val) {
-      keyStatus.textContent = "Please enter a key or click "Use Default".";
+      keyStatus.textContent = "Please enter a key or click 'Use Default'.";
       keyStatus.className = "key-status err";
       return;
     }
