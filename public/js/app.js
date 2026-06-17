@@ -496,7 +496,9 @@ function renderTree(tree) {
 
       const hintsEl = document.createElement("div");
       hintsEl.className = "agent-skill-hints";
-      hintsEl.innerHTML = SDLC_SKILLS.slice(0,5).map(s=>`<span class="skill-hint">${s.icon} ${s.label}</span>`).join("") + `<span class="skill-hint-more">+ more</span>`;
+      const hintPhases = agent.phases || [];
+      hintsEl.innerHTML = hintPhases.slice(0,5).map(p=>`<span class="skill-hint">${p.icon} ${p.name}</span>`).join("")
+        + (hintPhases.length > 5 ? `<span class="skill-hint-more">+${hintPhases.length-5} more</span>` : "");
       nav.appendChild(hintsEl);
     });
   });
@@ -525,6 +527,14 @@ function triggerSkill(cmdStr) {
   if (S.isStreaming) return;
   input.value = "";
   sendMessage(cmdStr);
+}
+
+// Agent phase card click — sends the phase's full prompt directly
+function triggerPhase(agentId, phaseId) {
+  if (S.isStreaming) return;
+  const agent = findAgent(agentId);
+  const phase = agent?.phases?.find(p => p.id === phaseId);
+  if (phase) sendMessage(phase.prompt);
 }
 
 function fillCommand(cmd) {
@@ -576,24 +586,26 @@ function renderAgentHistory(agentId) {
   chat.innerHTML = "";
   const msgs = getSession(agentId).messages;
   if (!msgs.length) {
-    const agent = findAgent(agentId) || { emoji:"🧑‍💻", name:"Software Engineer" };
-    const skillsHtml = SDLC_SKILLS.map(s =>
-      `<button class="skill-card" onclick="triggerSkill('${s.cmd}')"><span class="sk-icon">${s.icon}</span><div class="sk-body"><span class="sk-label">${s.label}</span><span class="sk-desc">${s.desc}</span></div></button>`
-    ).join("");
-    const cmdsHtml = SLASH_COMMANDS.slice(0,6).map(c =>
-      `<code class="cmd-hint" onclick="fillCommand('${c.cmd}')">${c.cmd}</code>`
+    const agent = findAgent(agentId) || { emoji:"🧑‍💻", name:"Software Development", description:"", phases:[] };
+    const phases = agent.phases || [];
+    const skillsHtml = phases.map(p => {
+      // First sentence of prompt as a short description
+      const desc = p.prompt.replace(/^(Help me |Run an? |I want to )/i, "").split(/[.!\n]/)[0].trim().slice(0, 58);
+      return `<button class="skill-card" onclick="triggerPhase('${agentId}','${p.id}')">
+        <span class="sk-icon">${p.icon}</span>
+        <div class="sk-body"><span class="sk-label">${p.name}</span><span class="sk-desc">${desc}</span></div>
+      </button>`;
+    }).join("");
+    const cmdsHtml = phases.slice(0, 6).map(p =>
+      `<code class="cmd-hint" onclick="triggerPhase('${agentId}','${p.id}')">${p.icon} ${p.name}</code>`
     ).join(" ");
     chat.innerHTML = `
       <div class="welcome-agent" id="welcome">
         <div class="w-logo">${agent.emoji}</div>
         <h1 class="w-title">${agent.name}</h1>
-        <p class="w-sub">XGAIR methodology · tell me what you want to build, or pick a skill below.</p>
+        <p class="w-sub">${agent.description || "Pick a skill below or type a message to begin."}</p>
         <div class="skill-grid">${skillsHtml}</div>
-        <div class="cmd-hints-row">
-          <span class="cmd-hints-label">Quick commands:</span>
-          ${cmdsHtml}
-          <code class="cmd-hint cmd-hint-more" onclick="fillCommand('/')">more…</code>
-        </div>
+        ${cmdsHtml ? `<div class="cmd-hints-row"><span class="cmd-hints-label">Quick start:</span>${cmdsHtml}</div>` : ""}
       </div>`;
     return;
   }
