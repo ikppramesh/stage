@@ -403,13 +403,24 @@ async function main() {
     output: process.stdout,
   });
 
-  const ask = (): Promise<string> => {
-    const agent = getAgent(session.agentId);
-    const prompt = `${c.cyan(agent?.emoji ?? "◆")} ${c.bold(agent?.name ?? session.agentId)} ${c.dim("›")} `;
-    return new Promise(resolve => rl.question(prompt, resolve));
-  };
+  // ask() returns null when stdin closes (EOF / Ctrl-D) so the loop
+  // can exit cleanly *after* any in-flight streaming completes.
+  let rlClosed = false;
+  rl.on("close", () => { rlClosed = true; });
 
-  rl.on("close", () => { console.log(c.dim("\nbye!\n")); process.exit(0); });
+  const ask = (): Promise<string | null> => {
+    if (rlClosed) return Promise.resolve(null);
+    const agent  = getAgent(session.agentId);
+    const prompt = `${c.cyan(agent?.emoji ?? "◆")} ${c.bold(agent?.name ?? session.agentId)} ${c.dim("›")} `;
+    return new Promise(resolve => {
+      const onClose = () => resolve(null);
+      rl.once("close", onClose);
+      rl.question(prompt, answer => {
+        rl.removeListener("close", onClose);
+        resolve(answer);
+      });
+    });
+  };
 
   // ── Run initial args if provided ─────────────────────────────────
   if (initArgs) {
@@ -421,8 +432,10 @@ async function main() {
   // ── REPL loop ────────────────────────────────────────────────────
   while (true) {
     const line = await ask();
+    if (line === null) break;   // stdin closed — exit after current stream finishes
     await handle(line);
   }
+  console.log(c.dim("\nbye!\n"));
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
