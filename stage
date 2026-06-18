@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Stage CLI wrapper — run from the project root
+# Usage:
+#   ./stage                              # interactive REPL
+#   ./stage @devops /intake              # start with a command
+#   ./stage "@pm what should our OKRs be?"
+cd "$(dirname "$0")"
+exec npx ts-node src/cli.ts "$@"

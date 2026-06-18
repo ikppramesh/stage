@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts"
+    "dev": "ts-node src/server.ts",
+    "stage": "ts-node src/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
