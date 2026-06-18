@@ -62,19 +62,60 @@ const SDLC_SKILLS = [
   { icon: "📚", label: "Documentation",        desc: "README · ADRs · runbooks",           cmd: "/docs" },
 ];
 
+// ── @mention agent aliases ────────────────────────────────
+const AGENT_MENTIONS = {
+  // Software Development
+  softwaredevelopment: "software-development", sd: "software-development", dev: "software-development",
+  // Frontend
+  frontend: "frontend-engineer", fe: "frontend-engineer", ui: "frontend-engineer",
+  // Backend
+  backend: "backend-engineer", be: "backend-engineer", api: "backend-engineer",
+  // Full Stack
+  fullstack: "fullstack-engineer", fs: "fullstack-engineer",
+  // DevOps
+  devops: "devops-engineer", ops: "devops-engineer", platform: "devops-engineer", cicd: "devops-engineer",
+  // QA
+  qa: "qa-engineer", test: "qa-engineer", testing: "qa-engineer",
+  // Security
+  security: "security-engineer", sec: "security-engineer", appsec: "security-engineer",
+  // Mobile
+  mobile: "mobile-engineer", ios: "mobile-engineer", android: "mobile-engineer",
+  // Data
+  data: "data-engineer", de: "data-engineer", etl: "data-engineer",
+  // ML/AI
+  ml: "ml-engineer", ai: "ml-engineer", mle: "ml-engineer",
+  // Product
+  pm: "product-manager", product: "product-manager",
+  // UX
+  ux: "ux-designer", design: "ux-designer", designer: "ux-designer",
+  // Technical Writer
+  writer: "technical-writer", docs: "technical-writer", tw: "technical-writer",
+  // Architect
+  architect: "software-architect", arch: "software-architect", sa: "software-architect",
+  // Engineering Manager
+  em: "engineering-manager", manager: "engineering-manager", mgr: "engineering-manager",
+  // Tech Lead
+  techlead: "tech-lead", lead: "tech-lead", tl: "tech-lead",
+};
+
 // ── State ────────────────────────────────────────────────
 const S = {
-  mode:          null,   // 'ws' | 'direct'
-  ws:            null,
-  clientId:      localStorage.getItem("stage_cid") || null,
-  activeAgentId: "software-development",
-  isStreaming:   false,
-  tree:          AGENT_REGISTRY,
-  agentSessions: {},     // agentId → { history: [], messages: [], tokens: {} }
-  currentModel:  null,
-  sessionTokens: { inputTotal: 0, outputTotal: 0, callCount: 0 },
-  cmdSelected:   -1,
-  cmdFiltered:   [],
+  mode:           null,   // 'ws' | 'direct'
+  ws:             null,
+  clientId:       localStorage.getItem("stage_cid") || null,
+  activeAgentId:  "software-development",
+  isStreaming:    false,
+  tree:           AGENT_REGISTRY,
+  agentSessions:  {},     // agentId → { history: [], messages: [], tokens: {} }
+  currentModel:   null,
+  sessionTokens:  { inputTotal: 0, outputTotal: 0, callCount: 0 },
+  cmdSelected:    -1,
+  cmdFiltered:    [],
+  paletteMode:    "slash",  // 'slash' | 'mention'
+  lastCommand:    null,   // null | { type: string, label: string } — triggers memory save
+  pendingMessage: null,   // null | string — sent after @mention agent switch
+  memCounts:      {},     // agentId → number
+  _memToastTimer: null,
 };
 
 // ── DOM ──────────────────────────────────────────────────
@@ -151,6 +192,17 @@ function handleWsMessage(m) {
       if (m.tokens) updateTokenDisplay(m.tokens, null);
       renderAgentHistory(m.agentId);
       enableInput(`Type a message or "/" for skill commands…`);
+      // Update memory badge from server count
+      if (m.memoryCount !== undefined) {
+        S.memCounts[m.agentId] = m.memoryCount;
+        updateMemoryBadge(m.agentId, m.memoryCount);
+      }
+      // Send the follow-up message queued by @mention
+      if (S.pendingMessage) {
+        const pending = S.pendingMessage;
+        S.pendingMessage = null;
+        setTimeout(() => sendMessage(pending), 0);
+      }
       break;
     case "stream_start":
       S.isStreaming = true; disableInput(); hideCommandPalette(); removeThinking(); showThinking();
@@ -167,14 +219,34 @@ function handleWsMessage(m) {
     case "stream_end":
       S.isStreaming = false; removeThinking();
       if (wsStreamEl) {
+        const savedContent = wsStreamBuf; // capture before clearing
         wsStreamEl.querySelector(".msg-content").innerHTML = marked.parse(wsStreamBuf);
         if (m.usage && m.model) attachUsageBadge(wsStreamEl, m.model, m.usage);
         saveMsg(S.activeAgentId, { role:"assistant", content:wsStreamBuf, model:m.model, usage:m.usage, time:new Date().toISOString() });
         wsStreamEl = null; wsStreamBuf = "";
+        // Trigger memory save for slash commands and phase cards
+        if (S.lastCommand && savedContent) {
+          const cmd = S.lastCommand;
+          S.lastCommand = null;
+          const agent = findAgent(S.activeAgentId);
+          wsSend({
+            type:      "save_memory",
+            clientId:  S.clientId,
+            agentId:   S.activeAgentId,
+            agentName: agent?.name || S.activeAgentId,
+            command:   cmd.label,
+            content:   savedContent,
+          });
+        }
       }
       if (m.usage) updateTokenDisplay(m.usage, m.model);
       if (m.model) setModelDisplay(m.model);
       enableInput(); scrollBottom();
+      break;
+    case "memory_saved":
+      S.memCounts[m.agentId] = m.count || 0;
+      updateMemoryBadge(m.agentId, m.count || 0);
+      showMemToast(`💾 ${m.path}${m.pushed ? " · pushed to repo ✓" : " · saved locally"}`);
       break;
     case "cleared":
       getSession(S.activeAgentId).messages = [];
@@ -235,6 +307,12 @@ async function directSend(userMessage) {
     scrollBottom();
   }
 
+  // Inject memory context into system prompt (direct mode)
+  const memCtxDirect = getDirectModeMemoryContext(S.activeAgentId);
+  const systemPromptDirect = memCtxDirect
+    ? `## 📚 MEMORY CONTEXT (last 3 saved sessions)\nUse for continuity. Do not repeat verbatim.\n\n${memCtxDirect}\n\n---\n\n${agent.systemPrompt}`
+    : agent.systemPrompt;
+
   let succeeded = false;
   for (let i = 0; i < OPENROUTER_MODELS.length; i++) {
     const model = OPENROUTER_MODELS[i];
@@ -256,7 +334,7 @@ async function directSend(userMessage) {
           stream:   true,
           stream_options: { include_usage: true },
           messages: [
-            { role: "system", content: agent.systemPrompt },
+            { role: "system", content: systemPromptDirect },
             ...session.history.map(m => ({ role: m.role, content: m.content })),
           ],
         }),
@@ -306,6 +384,11 @@ async function directSend(userMessage) {
         }
         setModelDisplay(model.label);
         saveMsg(S.activeAgentId, { role:"assistant", content:streamBuf, model:model.label, usage:usageObj, time:new Date().toISOString() });
+        // Direct-mode memory save
+        if (S.lastCommand && streamBuf) {
+          const cmd = S.lastCommand; S.lastCommand = null;
+          saveMemoryDirect(S.activeAgentId, cmd.label, streamBuf);
+        }
       }
 
       session.history.push({ role: "assistant", content: streamBuf });
@@ -332,10 +415,30 @@ function sendMessage(userMessage) {
   userMessage = userMessage.trim();
   if (!userMessage || S.isStreaming) return;
 
+  // ── @mention agent switching ──────────────────────────
+  if (userMessage.startsWith("@")) {
+    const spaceIdx = userMessage.indexOf(" ");
+    const alias    = (spaceIdx === -1 ? userMessage.slice(1) : userMessage.slice(1, spaceIdx)).toLowerCase();
+    const rest     = spaceIdx === -1 ? "" : userMessage.slice(spaceIdx + 1).trim();
+    const targetId = AGENT_MENTIONS[alias];
+    if (targetId) {
+      S.pendingMessage = rest || null;
+      input.value = ""; resize();
+      selectAgent(targetId);
+      return;
+    }
+    // unknown alias — fall through and send literally
+  }
+
   // Resolve slash command to full prompt
   const slashCmd = SLASH_COMMANDS.find(c => c.cmd === userMessage);
-  const actualMsg = slashCmd ? slashCmd.prompt : userMessage;
+  const actualMsg  = slashCmd ? slashCmd.prompt : userMessage;
   const displayMsg = userMessage;  // always show what the user typed
+
+  // Track last command for memory saving
+  if (slashCmd) {
+    S.lastCommand = { label: slashCmd.cmd };
+  }
 
   $("welcome")?.remove();
   clearSkillBadge();
@@ -392,6 +495,12 @@ async function directSendRaw(userMessage) {
     scrollBottom();
   }
 
+  // Inject memory context into system prompt (directSendRaw / slash commands)
+  const memCtxRaw = getDirectModeMemoryContext(S.activeAgentId);
+  const systemPromptRaw = memCtxRaw
+    ? `## 📚 MEMORY CONTEXT (last 3 saved sessions)\nUse for continuity. Do not repeat verbatim.\n\n${memCtxRaw}\n\n---\n\n${agent.systemPrompt}`
+    : agent.systemPrompt;
+
   for (let i = 0; i < OPENROUTER_MODELS.length; i++) {
     const model = OPENROUTER_MODELS[i];
     try {
@@ -412,7 +521,7 @@ async function directSendRaw(userMessage) {
           stream:   true,
           stream_options: { include_usage: true },
           messages: [
-            { role: "system", content: agent.systemPrompt },
+            { role: "system", content: systemPromptRaw },
             ...session.history.map(m => ({ role: m.role, content: m.content })),
           ],
         }),
@@ -456,6 +565,11 @@ async function directSendRaw(userMessage) {
         }
         setModelDisplay(model.label);
         saveMsg(S.activeAgentId, { role:"assistant", content:streamBuf, model:model.label, usage:usageObj, time:new Date().toISOString() });
+        // Direct-mode memory save (slash command raw path)
+        if (S.lastCommand && streamBuf) {
+          const cmd = S.lastCommand; S.lastCommand = null;
+          saveMemoryDirect(S.activeAgentId, cmd.label, streamBuf);
+        }
       }
 
       session.history.push({ role:"assistant", content:streamBuf });
@@ -527,9 +641,17 @@ function selectAgent(agentId) {
   if (S.mode === "ws") {
     wsSend({ type:"switch_agent", clientId:S.clientId, agentId });
   } else {
-    applyAgent(findAgent(agentId));
+    const a = findAgent(agentId);
+    if (a) { S.memCounts[agentId] = getDirectModeMemoryCount(agentId); updateMemoryBadge(agentId, S.memCounts[agentId]); }
+    applyAgent(a);
     renderAgentHistory(agentId);
     enableInput(`Type a message or "/" for skill commands…`);
+    // Direct mode: consume pending @mention message
+    if (S.pendingMessage) {
+      const pending = S.pendingMessage;
+      S.pendingMessage = null;
+      setTimeout(() => sendMessage(pending), 0);
+    }
   }
 }
 
@@ -545,7 +667,10 @@ function triggerPhase(agentId, phaseId) {
   if (S.isStreaming) return;
   const agent = findAgent(agentId);
   const phase = agent?.phases?.find(p => p.id === phaseId);
-  if (phase) sendMessage(phase.prompt);
+  if (phase) {
+    S.lastCommand = { label: `${phase.icon} ${phase.name}` };
+    sendMessage(phase.prompt);
+  }
 }
 
 function fillCommand(cmd) {
@@ -726,8 +851,10 @@ function resize() { input.style.height="auto"; input.style.height=Math.min(input
 
 input.addEventListener("input", () => {
   resize();
-  if (input.value.startsWith("/")) showCommandPalette(input.value);
-  else hideCommandPalette();
+  const v = input.value;
+  if (v.startsWith("/"))      showCommandPalette(v);
+  else if (v.startsWith("@")) showMentionPalette(v.slice(1));
+  else                         hideCommandPalette();
 });
 
 input.addEventListener("keydown", e => {
@@ -855,6 +982,82 @@ function updateKeyBtnState() {
 // ── Helpers ───────────────────────────────────────────────
 function escHtml(t) {
   return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\n/g,"<br>");
+}
+
+// ── @mention palette ──────────────────────────────────────
+function showMentionPalette(query) {
+  const palette = $("cmd-palette");
+  const lc = query.toLowerCase();
+  const seen = new Map();
+  for (const [alias, agentId] of Object.entries(AGENT_MENTIONS)) {
+    if (!lc || alias.startsWith(lc) || agentId.startsWith(lc)) {
+      if (!seen.has(agentId)) {
+        const agent = findAgent(agentId);
+        if (agent) seen.set(agentId, { alias, agent });
+      }
+    }
+  }
+  const results = [...seen.values()];
+  if (!results.length) { hideCommandPalette(); return; }
+  S.paletteMode = "mention";
+  S.cmdFiltered = results.map(({ alias, agent }) => ({
+    cmd: `@${alias}`, icon: agent.emoji, label: agent.name, desc: agent.description,
+    _isMention: true, _agentId: agent.id,
+  }));
+  S.cmdSelected = 0;
+  palette.innerHTML = S.cmdFiltered.map((c, i) =>
+    `<div class="cmd-item${i===0?" selected":""}" data-index="${i}" onclick="pickCommand(${i})">` +
+    `<span class="cmd-icon">${c.icon}</span><span class="cmd-name">${c.cmd}</span>` +
+    `<span class="cmd-desc">${c.desc}</span></div>`
+  ).join("");
+  palette.hidden = false;
+}
+
+// ── Memory helpers — local (direct mode) ──────────────────
+function saveMemoryDirect(agentId, command, content) {
+  try {
+    const key = `stage_mem_${agentId}_${Date.now()}`;
+    localStorage.setItem(key, JSON.stringify({ agentId, command, content, ts: new Date().toISOString() }));
+    S.memCounts[agentId] = getDirectModeMemoryCount(agentId);
+    updateMemoryBadge(agentId, S.memCounts[agentId]);
+    showMemToast(`💾 Saved to local memory for ${agentId} (static mode — no git push)`);
+  } catch { showMemToast("⚠ Memory save failed — localStorage may be full"); }
+}
+
+function getDirectModeMemoryCount(agentId) {
+  const prefix = `stage_mem_${agentId}_`;
+  return Object.keys(localStorage).filter(k => k.startsWith(prefix)).length;
+}
+
+function getDirectModeMemoryContext(agentId) {
+  const prefix = `stage_mem_${agentId}_`;
+  return Object.keys(localStorage)
+    .filter(k => k.startsWith(prefix))
+    .sort()
+    .slice(-3)
+    .map(k => { try { const d = JSON.parse(localStorage.getItem(k)); return (d.content || "").slice(0, 2000); } catch { return ""; } })
+    .filter(Boolean)
+    .join("\n\n---\n\n");
+}
+
+// ── Memory UI helpers ─────────────────────────────────────
+function updateMemoryBadge(agentId, count) {
+  const btn = document.querySelector(`.tree-agent[data-id="${agentId}"]`);
+  if (!btn) return;
+  let badge = btn.querySelector(".mem-badge");
+  if (count > 0) {
+    if (!badge) { badge = document.createElement("span"); badge.className = "mem-badge"; btn.appendChild(badge); }
+    badge.textContent = count;
+  } else if (badge) { badge.remove(); }
+}
+
+function showMemToast(text) {
+  const el = $("mem-toast");
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add("visible");
+  clearTimeout(S._memToastTimer);
+  S._memToastTimer = setTimeout(() => el.classList.remove("visible"), 5000);
 }
 
 // ── Boot ──────────────────────────────────────────────────
