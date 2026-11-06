@@ -46,6 +46,7 @@ GitHub Pages ──direct fetch──► OpenRouter API cascade (no backend need
 | **Slash commands** | 12 built-in slash commands (`/status`, `/plan`, `/implement`, `/ship`, …) |
 | **API Key modal** | Users can supply their own OpenRouter key; falls back to the shared default |
 | **Collapsible sidebar** | Agents grouped under collapsible categories with phase hints |
+| **Landing page demo** | Animated demo and feature grid on the welcome screen (`public/demo.svg`) |
 | **No framework** | Vanilla HTML + CSS + JS frontend — zero build step for the UI |
 
 ---
