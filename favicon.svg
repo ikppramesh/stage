@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="10" fill="#0e0f11"/>
+  <!-- Outer ring -->
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#cc785c" stroke-width="2.5"/>
+  <!-- Middle ring -->
+  <circle cx="32" cy="32" r="18" fill="none" stroke="#cc785c" stroke-width="2"/>
+  <!-- Eye / lens shape -->
+  <path d="M 8 32 Q 32 10 56 32 Q 32 54 8 32 Z"
+        fill="none" stroke="#cc785c" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Pupil ring -->
+  <circle cx="32" cy="32" r="7" fill="none" stroke="#cc785c" stroke-width="2"/>
+  <!-- Centre dot -->
+  <circle cx="32" cy="32" r="3" fill="#cc785c"/>
+</svg>
