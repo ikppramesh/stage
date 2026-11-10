@@ -9,7 +9,7 @@ const renderer = new marked.Renderer();
 renderer.code = (code, lang) => {
   const language = lang && hljs.getLanguage(lang) ? lang : "plaintext";
   const highlighted = hljs.highlight(code, { language, ignoreIllegals: true }).value;
-  return `<div class="code-block"><div class="code-header"><span class="code-lang">${language}</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code class="hljs language-${language}">${highlighted}</code></pre></div>`;
+  return `<div class="code-block"><div class="code-header"><span class="code-lang">${language}</span><button class="copy-btn">Copy</button></div><pre><code class="hljs language-${language}">${highlighted}</code></pre></div>`;
 };
 marked.use({ renderer });
 
@@ -689,7 +689,7 @@ function showCommandPalette(query) {
   S.cmdSelected = S.cmdFiltered.length > 0 ? 0 : -1;
   if (!S.cmdFiltered.length) { hideCommandPalette(); return; }
   palette.innerHTML = S.cmdFiltered.map((c,i) =>
-    `<div class="cmd-item${i===S.cmdSelected?" selected":""}" data-index="${i}" onclick="pickCommand(${i})"><span class="cmd-icon">${c.icon}</span><span class="cmd-name">${c.cmd}</span><span class="cmd-desc">${c.desc}</span></div>`
+    `<div class="cmd-item${i===S.cmdSelected?" selected":""}" data-index="${i}"><span class="cmd-icon">${c.icon}</span><span class="cmd-name">${c.cmd}</span><span class="cmd-desc">${c.desc}</span></div>`
   ).join("");
   palette.hidden = false;
 }
@@ -727,13 +727,13 @@ function renderAgentHistory(agentId) {
     const skillsHtml = phases.map(p => {
       // First sentence of prompt as a short description
       const desc = p.prompt.replace(/^(Help me |Run an? |I want to )/i, "").split(/[.!\n]/)[0].trim().slice(0, 58);
-      return `<button class="skill-card" onclick="triggerPhase('${agentId}','${p.id}')">
+      return `<button class="skill-card" data-agent-id="${agentId}" data-phase-id="${p.id}">
         <span class="sk-icon">${p.icon}</span>
         <div class="sk-body"><span class="sk-label">${p.name}</span><span class="sk-desc">${desc}</span></div>
       </button>`;
     }).join("");
     const cmdsHtml = phases.slice(0, 6).map(p =>
-      `<code class="cmd-hint" onclick="triggerPhase('${agentId}','${p.id}')">${p.icon} ${p.name}</code>`
+      `<code class="cmd-hint" data-agent-id="${agentId}" data-phase-id="${p.id}">${p.icon} ${p.name}</code>`
     ).join(" ");
     chat.innerHTML = `
       <div class="welcome-agent" id="welcome">
@@ -891,6 +891,16 @@ document.addEventListener("click", e => {
   if (!$("cmd-palette").contains(e.target) && e.target!==input) hideCommandPalette();
 });
 
+// Inline onclick attributes are blocked by the CSP, so clicks on generated markup are routed here
+document.addEventListener("click", e => {
+  const copy  = e.target.closest(".copy-btn");
+  const item  = e.target.closest(".cmd-item");
+  const phase = e.target.closest("[data-phase-id]");
+  if (copy)       copyCode(copy);
+  else if (item)  pickCommand(Number(item.dataset.index));
+  else if (phase) triggerPhase(phase.dataset.agentId, phase.dataset.phaseId);
+});
+
 // ── Status dot ────────────────────────────────────────────
 function setConnStatus(cls, txt) {
   $("status-dot").className = `sdot ${cls}`;
@@ -1006,7 +1016,7 @@ function showMentionPalette(query) {
   }));
   S.cmdSelected = 0;
   palette.innerHTML = S.cmdFiltered.map((c, i) =>
-    `<div class="cmd-item${i===0?" selected":""}" data-index="${i}" onclick="pickCommand(${i})">` +
+    `<div class="cmd-item${i===0?" selected":""}" data-index="${i}">` +
     `<span class="cmd-icon">${c.icon}</span><span class="cmd-name">${c.cmd}</span>` +
     `<span class="cmd-desc">${c.desc}</span></div>`
   ).join("");
