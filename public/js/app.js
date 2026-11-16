@@ -716,11 +716,17 @@ function pickCommand(index) {
 // ── Local message history ─────────────────────────────────
 function saveMsg(agentId, msg) {
   getSession(agentId).messages.push(msg);
+  updateExportBtn();
+}
+
+function updateExportBtn() {
+  $("btn-export").disabled = !getSession(S.activeAgentId).messages.length;
 }
 
 function renderAgentHistory(agentId) {
   chat.innerHTML = "";
   const msgs = getSession(agentId).messages;
+  updateExportBtn();
   if (!msgs.length) {
     const agent = findAgent(agentId) || { emoji:"🧑‍💻", name:"Software Development", description:"", phases:[] };
     const phases = agent.phases || [];
@@ -755,6 +761,34 @@ function renderAgentHistory(agentId) {
     }
   });
   scrollBottom();
+}
+
+// ── Transcript export ─────────────────────────────────────
+function buildTranscriptMarkdown(agentId) {
+  const agent = findAgent(agentId) || { name: agentId };
+  const msgs  = getSession(agentId).messages;
+  const lines = [`# ${agent.name} — Session Transcript`, "", `Exported ${new Date().toLocaleString()} · ${msgs.length} messages`, ""];
+  msgs.forEach(msg => {
+    const who  = msg.role === "user" ? "You" : agent.name;
+    const when = msg.time ? ` · ${new Date(msg.time).toLocaleString()}` : "";
+    lines.push(`## ${who}${when}`, "", msg.content, "");
+    if (msg.usage && msg.model) {
+      lines.push(`_${msg.model} · ${msg.usage.inputThisCall}↑ ${msg.usage.outputThisCall}↓ tokens_`, "");
+    }
+  });
+  return lines.join("\n");
+}
+
+function exportTranscript() {
+  const agentId = S.activeAgentId;
+  if (!getSession(agentId).messages.length) return;
+  const blob  = new Blob([buildTranscriptMarkdown(agentId)], { type: "text/markdown;charset=utf-8" });
+  const url   = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+  const a     = document.createElement("a");
+  a.href = url; a.download = `${agentId}-transcript-${stamp}.md`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ── Bubble helpers ────────────────────────────────────────
@@ -870,6 +904,8 @@ input.addEventListener("keydown", e => {
 });
 
 $("btn-send").addEventListener("click", () => sendMessage(input.value));
+
+$("btn-export").addEventListener("click", exportTranscript);
 
 $("btn-clear").addEventListener("click", () => {
   if (S.isStreaming) return;

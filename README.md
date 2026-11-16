@@ -43,6 +43,7 @@ GitHub Pages ──direct fetch──► OpenRouter API cascade (no backend need
 | **Claude primary** | Uses Claude Opus 4.6 with adaptive thinking when `ANTHROPIC_API_KEY` is set |
 | **Streaming** | Token-by-token streaming with live markdown rendering |
 | **Token tracking** | Per-call and session-total input/output token counters |
+| **Transcript export** | Download the active agent's chat as a Markdown file with the ⤓ Export button |
 | **Slash commands** | 12 built-in slash commands (`/status`, `/plan`, `/implement`, `/ship`, …) |
 | **API Key modal** | Users can supply their own OpenRouter key; falls back to the shared default |
 | **Collapsible sidebar** | Agents grouped under collapsible categories with phase hints |

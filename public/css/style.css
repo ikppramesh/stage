@@ -308,6 +308,8 @@ html, body {
   font-family: var(--sans);
 }
 .tb-btn:hover { border-color: var(--red); color: var(--red); }
+.tb-btn:disabled { opacity: .4; cursor: default; }
+.tb-btn:disabled:hover { border-color: var(--border2); color: var(--text-3); }
 
 /* ── Chat area ────────────────────────────────────────── */
 #chat {
