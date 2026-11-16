@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-label="Animated demo: pick an agent, run /plan, watch the answer stream in">
+  <style>
+    text{font-family:Menlo,Consolas,monospace;font-size:14px;fill:#ececf1}
+    .dim{fill:#8b90a0}.acc{fill:#cc785c}.grn{fill:#22c55e}
+    .l{opacity:0;animation:show 12s infinite}
+    .l2{animation-delay:1.5s}.l3{animation-delay:3.5s}.l4{animation-delay:4.2s}.l5{animation-delay:4.9s}.l6{animation-delay:5.6s}
+    .cur{animation:blink 1s steps(1) infinite}
+    @keyframes show{0%{opacity:0}2%{opacity:1}92%{opacity:1}100%{opacity:0}}
+    @keyframes blink{50%{opacity:0}}
+    @media (prefers-reduced-motion:reduce){.l{animation:none;opacity:1}.cur{animation:none}}
+  </style>
+  <rect width="640" height="300" rx="10" fill="#0e0f11"/>
+  <rect width="640" height="32" rx="10" fill="#131519"/>
+  <circle cx="20" cy="16" r="5" fill="#ef4444"/><circle cx="38" cy="16" r="5" fill="#f59e0b"/><circle cx="56" cy="16" r="5" fill="#22c55e"/>
+  <text x="250" y="21" class="dim">Stage · Software Development</text>
+  <g class="l"><text x="24" y="66" class="acc">❯</text><text x="44" y="66">/plan add rate limiting to the API</text></g>
+  <g class="l l2"><text x="24" y="100" class="dim">&gt; Trying claude-opus-4-6… falling back to free model</text></g>
+  <g class="l l3"><text x="24" y="136" class="grn">PLAN</text><text x="70" y="136">— 3 tasks, approval required</text></g>
+  <g class="l l4"><text x="24" y="166">T-1.1  Add express-rate-limit middleware</text></g>
+  <g class="l l5"><text x="24" y="192">T-1.2  Return 429 with { error } body</text></g>
+  <g class="l l6"><text x="24" y="218">T-1.3  Cover with unit + integration tests</text></g>
+  <g class="l l6"><text x="24" y="262" class="dim">Session: 1,284 tokens · 1 call</text></g>
+</svg>
